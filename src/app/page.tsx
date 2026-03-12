@@ -17,6 +17,7 @@ async function fetchTickets(): Promise<Ticket[]> {
     `
     )
     .order('created_at', { ascending: false })
+    .order('created_at', { ascending: false, foreignTable: 'messages' })
     .limit(1, { foreignTable: 'messages' });
 
   if (error) {

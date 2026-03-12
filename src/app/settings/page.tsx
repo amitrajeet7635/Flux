@@ -30,7 +30,7 @@ export default function SettingsPage() {
         .from('agents')
         .select('name, display_locale')
         .eq('id', DEFAULT_AGENT_ID)
-        .single();
+        .single<{ name: string; display_locale: string }>();
       if (data) {
         setName(data.name);
         setLocale(data.display_locale);
@@ -48,7 +48,7 @@ export default function SettingsPage() {
 
     const { error: updateError } = await supabase
       .from('agents')
-      .update({ name, display_locale: locale })
+      .update({ name, display_locale: locale } as never)
       .eq('id', DEFAULT_AGENT_ID);
 
     setSaving(false);
