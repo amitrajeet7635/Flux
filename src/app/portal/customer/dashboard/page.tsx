@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import CustomerSidebar from '@/components/portal/customer/CustomerSidebar';
 import TicketList from '@/components/portal/customer/TicketList';
 import NewTicketForm from '@/components/portal/customer/NewTicketForm';
+import AccountSettings from '@/components/portal/customer/AccountSettings';
 
 export default function CustomerDashboardPage() {
   const searchParams = useSearchParams();
@@ -20,7 +21,7 @@ export default function CustomerDashboardPage() {
           minWidth: 0,
         }}
       >
-        {view === 'new' ? <NewTicketForm /> : <TicketList />}
+        {view === 'new' ? <NewTicketForm /> : view === 'account' ? <AccountSettings /> : <TicketList />}
       </main>
     </div>
   );

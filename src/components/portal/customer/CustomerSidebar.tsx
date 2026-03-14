@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import LocalePill from '@/components/shared/LocalePill';
 import { getSupabaseBrowserClient } from '@/lib/supabase';
 
@@ -11,9 +12,69 @@ const navItems = [
   { label: 'Account', href: '/portal/customer/dashboard?view=account' },
 ];
 
+// Map detected_locale to a short display label for the pill
+function localeToLabel(locale: string | null): string {
+  if (!locale) return 'EN';
+  const map: Record<string, string> = {
+    en: 'EN',
+    de: 'DE',
+    ja: 'JA',
+    ar: 'AR',
+    'pt-BR': 'PT',
+    fr: 'FR',
+    es: 'ES',
+    ko: 'KO',
+    zh: 'ZH',
+    hi: 'HI',
+    'hi-Latn': 'HI',
+  };
+  return map[locale] ?? locale.slice(0, 2).toUpperCase();
+}
+
 export default function CustomerSidebar() {
   const pathname = usePathname();
   const router = useRouter();
+
+  const [displayName, setDisplayName] = useState<string>('Your Account');
+  const [initials, setInitials] = useState<string>('U');
+  const [localeLabel, setLocaleLabel] = useState<string>('EN');
+
+  useEffect(() => {
+    async function loadProfile() {
+      const supabase = getSupabaseBrowserClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Name from customers table first, fallback to OAuth metadata
+      const { data } = await supabase
+        .from('customers')
+        .select('name, detected_locale')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      const name: string =
+        data?.name ||
+        user.user_metadata?.full_name ||
+        user.email?.split('@')[0] ||
+        'Your Account';
+
+      const locale: string = data?.detected_locale || 'en';
+
+      setDisplayName(name);
+      setInitials(
+        name
+          .split(' ')
+          .slice(0, 2)
+          .map((w: string) => w[0]?.toUpperCase() ?? '')
+          .join(''),
+      );
+      setLocaleLabel(localeToLabel(locale));
+    }
+
+    loadProfile();
+
+    // Re-run whenever the URL changes (e.g. after saving settings)
+  }, [pathname]);
 
   async function handleSignOut() {
     const supabase = getSupabaseBrowserClient();
@@ -66,22 +127,26 @@ export default function CustomerSidebar() {
               fontWeight: 700,
               fontSize: '13px',
               color: 'var(--accent)',
+              flexShrink: 0,
             }}
           >
-            U
+            {initials}
           </div>
-          <div>
+          <div style={{ minWidth: 0 }}>
             <div
               style={{
                 fontFamily: 'var(--font-dm-sans), sans-serif',
                 fontSize: '13px',
                 fontWeight: 600,
                 color: 'var(--text-primary)',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
               }}
             >
-              Your Account
+              {displayName}
             </div>
-            <LocalePill locale="EN" />
+            <LocalePill locale={localeLabel} />
           </div>
         </div>
       </div>
