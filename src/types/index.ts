@@ -13,7 +13,7 @@ export interface Agent {
 export interface Ticket {
   id: string;
   customer_id: string;
-  status: 'open' | 'closed' | 'pending';
+  status: 'open' | 'closed' | 'pending' | 'resolved';
   source_locale: string;
   created_at: string;
   customers?: Customer;
